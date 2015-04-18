@@ -82,7 +82,7 @@ Execute a test suite by navigating to the HTML file by browser or double click t
 # Rhino
 Js-test can be used to test server-side JavaScript written for [Rhino](https://developer.mozilla.org/en-US/docs/Rhino_documentation).
 
-The same test modules can be used for browser as well as Rhino.  However, test suites for Rhinoe are stored as plain JavaScript.  For example, a simple test suite `tests/all.js` might contain:
+The same test modules can be used for browser as well as Rhino.  However, test suites for Rhino are stored as plain JavaScript.  For example, a simple test suite `tests/all.js` might contain:
 ```
 /* Include necessary sub-modules here */
 load ('../js/test.js');
