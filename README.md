@@ -14,12 +14,12 @@ TDD has several benefits:
 Js-test is contained completely in the `js/jest.js` file.  To use js-test in your own projects, copy the file to your project and create a folder for the tests.
 
 The following examples assume that your project is laid out as follows:
-  * js - Javascript files
-    - js/test.js
-  * tests - Test files
-    - tests/index.html - Main test suite
-    - tests/user.js - Test module for feature A
-    - tests/sanity.js - Test module for feature B
+  * `js` - Javascript files
+    - `js/test.js`
+  * `tests` - Test files
+    - `tests/index.html` - Main test suite
+    - `tests/user.js` - Test module for feature A
+    - `tests/sanity.js` - Test module for feature B
 
 
 ## Test Case
@@ -30,7 +30,6 @@ In Js-test, each test case consists of a unique name, test function and expected
 this.test ('sanity-101.0', function () {
     return 1 + 1;
 }, 2);
-});
 ```
 
 If a test case returns true or something convertible to true on success, then you can leave out the expected value.  For example, the following test case is interchangeable to test case 'sanity-101.0'.
@@ -60,9 +59,9 @@ this.test ('user-22.0', function () {
 
 
 ## Test Module
-Test module is a collection of test cases who excercise a module from multiple prespectives.  Test modules are saves into separate js files.
+Test module is a collection of test cases who excercise a module from multiple prespectives.  Test modules are saved into separate js files.
 
-A simple test module for class User might contain
+A simple test module `tests/user.js` for class User might contain
 ```
 Test.module ('User', function () {
 
