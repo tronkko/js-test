@@ -25,6 +25,7 @@ Test.prototype.constructor = Test;
 Test._testing = 0;
 Test._success = 0;
 Test._failed = 0;
+Test._names = {};
 
 /* Define placeholder functions */
 Test.prototype.cleanup = function () {
@@ -808,6 +809,7 @@ Test.clear = function () {
     /* Reset static variables */
     Test._success = 0;
     Test._failed = 0;
+    Test._names = {};
 
     /* Clear log if the debug window has been created */
     if (typeof document != 'undefined') {
@@ -1089,6 +1091,12 @@ Test.prototype.test = function (name, func/*, exp*/) {
     } else {
         exp = true;
     }
+
+    /* Issue a warning if test name is not unique */
+    if (typeof Test._names[name] != 'undefined') {
+        Test.output ('Warning: duplicate test name', name);
+    }
+    Test._names[name] = 1;
 
     /* Run test function */
     Test._testing++;

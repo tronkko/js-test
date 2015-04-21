@@ -10,8 +10,10 @@
 
 Test.module ('sanity', {
     initialize: function () {
+        this.id = 5567;
     },
     run: function () {
+
         /* Test fails if it raises an exception */
         this.test ('sanity-100.0', function () {
             var ok = false;
@@ -24,6 +26,7 @@ Test.module ('sanity', {
                 
             }
             catch (e) {
+                /* OK: got exception as expected */
                 ok = true;
             }
             return ok;
@@ -36,6 +39,12 @@ Test.module ('sanity', {
 
         /* Function isTesting returns false outside tests */
         Test.assert (!Test.isTesting ());
+
+        /* Function initialize was called before testing started */
+        this.test ('sanity-120.0', function () {
+            return this.id;
+        }, 5567);
+
     },
     cleanup: function () {
     },

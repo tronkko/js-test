@@ -52,7 +52,7 @@ Test.module ('toString', function () {
     this.test ('tos-33.0', function () {
         return Test.toString ([ 'a' ]);
     }, '[ "a" ]');
-    this.test ('tos-33.0', function () {
+    this.test ('tos-34.0', function () {
         var arr = [ 1, 2, 3 ];
         delete arr[1];
         return Test.toString (arr);
@@ -68,7 +68,7 @@ Test.module ('toString', function () {
     this.test ('tos-42.0', function () {
         return Test.toString ({ a:3, b:'jep' });
     }, '{ a:3, b:"jep" }');
-    this.test ('tos-42.0', function () {
+    this.test ('tos-43.0', function () {
         return Test.toString ({ a:3, b:[1,2] });
     }, '{ a:3, b:[ 1, 2 ] }');
 

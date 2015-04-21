@@ -33,7 +33,7 @@ Test.module ('isArray', {
         this.test ('array-106.0', function () {
             return !Test.isArray ({ a:3 });
         });
-        this.test ('array-106.0', function () {
+        this.test ('array-107.0', function () {
             /* Create mixed array with indexed and associative items */
             var arr = [ 1 ];
             arr.x = 3;
@@ -41,7 +41,7 @@ Test.module ('isArray', {
             /* Mixed array is not indexed array in strict sense */
             return !Test.isArray (arr);
         });
-        this.test ('array-107.0', function () {
+        this.test ('array-108.0', function () {
             /* Create indexed array with three items */
             var arr = [];
             arr[0] = 1;

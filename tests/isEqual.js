@@ -403,7 +403,7 @@ Test.module ('isEqual', function () {
     this.test ('equal-286.0', function () {
         return !Test.isEqual ({ a:3 }, [ 3 ]);
     });
-    this.test ('equal-286.0', function () {
+    this.test ('equal-286.1', function () {
         return !Test.isEqual ({ a:3 }, { a:5 });
     });
     this.test ('equal-287.0', function () {
@@ -412,7 +412,7 @@ Test.module ('isEqual', function () {
     this.test ('equal-288.0', function () {
         return !Test.isEqual ({ a:3 }, { a:3, b:35 });
     });
-    this.test ('equal-288.0', function () {
+    this.test ('equal-288.1', function () {
         return Test.isEqual ({ b:35, a:3 }, { a:3, b:35 });
     });
 
