@@ -167,7 +167,7 @@ Run a test suite by navigating to the HTML file by browser or double click the H
 
 ## Hints
 
-When adding new test modules to a test suite, add new modules to the *beginning* of the list.  This speeds up the edit-test-edit cycle as you can start fixing errors on the very latest module without waiting for the older test modules to finish.
+When adding new modules to a test suite, consider adding new modules to the *beginning* of the list.  This speeds up the edit-test-edit cycle as you can start fixing errors on the very latest module without waiting for the older modules to finish.  (You can move the test module to its proper position after you are done editing, if you wish to organize test modules in some way.)
 
 If a test suite takes several minutes to complete, then create additional test suites with smaller number of test modules.  This allows you to choose which tests to run.  For example, you might want to run a quick sub-system check after each edit and run the complete test suite before committing changes to version control.
 
