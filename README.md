@@ -59,7 +59,7 @@ this.test ('user-22.0', function () {
 
 
 ## Test Module
-Test module is a collection of test cases who excercise a module from multiple prespectives.  Test modules are saved into separate js files.
+Test module is a collection of test cases who excercise a module from multiple perspectives.  Test modules are saved into separate js files.
 
 A simple test module `tests/user.js` for class User might contain
 ```
