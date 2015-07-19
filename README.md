@@ -9,21 +9,8 @@ TDD has several benefits:
   3. eliminating bugs early in the process helps to avoid debugging later which saves developers' time
 
 
-# Using Js-test in Your Own Projects
-
-Js-test is contained completely in the `js/jest.js` file.  To use js-test in your own projects, copy the file to your project and create a folder for the tests.
-
-The following examples assume that your project is laid out as follows:
-  * `js` - Javascript files
-    - `js/test.js`
-  * `tests` - Test files
-    - `tests/index.html` - Main test suite
-    - `tests/user.js` - Test module for feature A
-    - `tests/sanity.js` - Test module for feature B
-
-
-## Test Case
-Test case excercises a feature of the system and compares the result against an expected value.  Test case will pass if only the computed result matches the expected value.
+## Building Test Cases
+Test case excercises a feature from one angle and compares the result against an expected value.  If the software is working as intended, then the computed value will matched the expected value.  Conversely, if the test case does *not* produce the same value as before, then you know that a change has caused unintended consequences.
 
 In Js-test, each test case consists of a unique name, test function and expected result.  For example, a simple test case verifying that 1+1 is still 2 might look like
 ```
@@ -39,7 +26,7 @@ this.test ('sanity-102.0', function () {
 });
 ```
 
-By default, test case will be considered a failure if it throws an exception.  If you wish to ensure that a feature WILL throw an exception, then you will need to catch the exception as
+By default, test case will be considered a failure if it throws an exception.  If you wish to ensure that a feature WILL throw an exception, then catch the exception as
 ```
 this.test ('user-22.0', function () {
     var ok = false;
@@ -59,9 +46,9 @@ this.test ('user-22.0', function () {
 
 
 ## Test Module
-Test module is a collection of test cases who excercise a module from multiple perspectives.  Test modules are saved into separate js files.
+Test module is a collection of test cases who excercise a feature from multiple perspectives.
 
-A simple test module `tests/user.js` for class User might contain
+In Js-test, test modules are saved into distinct JavaScript files.  A simple test module for class User might look like
 ```
 Test.module ('User', function () {
 
@@ -103,32 +90,47 @@ Test.module ('User', {
 });
 ```
 
-Ideally, each test case would be independent of other test cases.  However, in practice, it is often easier to set up the environment through series of test cases than to build the environment separately for each test case.  Should you choose to do so, Js-test allows you to write dependent test cases where one test case modifies the enviroment for the next test case.
-
-A test module with interdependent test cases might contain
+Ideally, each test case would be independent of other test cases.  However, in practice, the amount of initialization and cleanup logic can be greatly reduced if you set up scenarios through series of test cases who gradually build the environment.  For example, a test module with such interdependent test cases might look like
 ```
 Test.module ('User', {
     initialize: function () {
-        // Create test user
-        this.userid = server.createUser ('Teddy Tiger');
-        this.user = server.getUser (this.userid);
+        this.userid = null;
+        this.user = null;
     },
 
     // Execute module test
     run: function () {
+    
+        // Create test user and check that we receive an id
+        this.test ('user-100.0', function () {
+            this.userid = server.createUser ('Teddy Tiger');
+            return (this.userid > 0);
+        });
 
-        // Retrieve user's name
+        // Now that we have an id, try to load user from server
+        this.test ('user-101.0', function () {
+            this.user = server.getUser (this.userid);
+            return this.user;
+        });
+
+        // Make sure that user name was saved properly to server
         this.test ('user-110.0', function () {
             return this.user.getName ();
         }, 'Teddy Tiger');
 
-        // Change user name
+        // Now that user name is OK, try to change it
         this.test ('user-120.0', function () {
             return this.user.setName ('Bobby Tiger');
         });
 
-        // Make sure that name changed
+        // Make sure that name changed in memory
         this.test ('user-130.0', function () {
+            return this.user.getName ();
+        }, 'Bobby Tiger');
+
+        // Reload user and make sure that name changed on server too
+        this.test ('user-140.0', function () {
+            this.user = server.getUser (this.userid);
             return this.user.getName ();
         }, 'Bobby Tiger');
 
@@ -141,17 +143,17 @@ Test.module ('User', {
 });
 ```
 
-Note that, due to the dependent nature of the test cases, Js-test will execute test cases within a module stricly in the order specified and up to the first failure only.  That is, if the test 'user-120.0' in the example above fails, then the test 'user-130.0' will not be executed.
+Note that, due to the interdependent nature of the test cases, Js-test will execute test cases within a module stricly in the order specified and up to the first failure only.  That is, if the test case 'user-120.0' in the example above fails, then test cases starting from 'user-130.0' will not be executed.
 
 
 ## Test Suite
 Test suite is a collection of test modules that are run together.  For small projects, a single test suite containing all the available test modules is usually enough.
 
-Test suite is saved to an HTML file.  This file loads the dependent JavaScript files first and then runs the test modules using Test.suite function.  For example, a simple test suite in file `tests/index.html` might contain
+Test suite is saved to an HTML file.  Test suite should load the dependent JavaScript files first and then run the test modules using Test.suite function.  For example, a simple test suite might contain
 ```
 <body>
 <!-- Include necessary sub-modules here -->
-<script src="../js/test.js"></script>
+<script src="test.js"></script>
 
 <!-- Run test modules in files user.js and sanity.js -->
 <script type="text/javascript">
@@ -162,7 +164,23 @@ Test.suite ([
 </script>
 ```
 
-Run a test suite by navigating to the HTML file by browser or double click the HTML file in file explorer to open the file locally.  Once you have corrected any errors, refresh the page to re-run the tests.  This can be done quickly by pressing F5 or Control+R.
+Run a test suite by navigating to the HTML file by browser or double click the HTML file in file explorer to open the file locally.  Once you have corrected any errors, refresh the page to re-run the tests.  This can be done quickly by pressing F5 or Control+R.  If you some tests fail, then check out the JavaScript console for detailed error messages.
+
+
+# Using Js-test in Your Own Projects
+
+To use js-test in your own projects, create a directory for test modules and copy the file `js/jest.js` to your own project.  For example, your project might be laid out as follows:
+  * `js` - You own Javascript classes and modules being tested
+    - `js/user.js` - An example class
+  * `tests` - Test modules
+    - `tests/index.html` - Main test suite
+    - `tests/user-load.js` - Test module for User.load function
+    - `tests/user-save.js` - Test module for User.save function
+    - `test/test.js` - Js-test main file copied from this repository
+
+For an example, check out [Js-vector](https://github.com/tronkko/js-vector) repository in GitHub.
+
+Js-test may be freely distributed under the MIT license.
 
 
 ## Hints
@@ -172,14 +190,13 @@ When adding new modules to a test suite, consider adding new modules to the *beg
 If a test suite takes several minutes to complete, then create additional test suites with smaller number of test modules.  This allows you to choose which tests to run.  For example, you might want to run a quick sub-system check after each edit and run the complete test suite before committing changes to version control.
 
 
-
 # Rhino
 Js-test can be used to test server-side JavaScript written for [Rhino](https://developer.mozilla.org/en-US/docs/Rhino_documentation).
 
 The same test modules can be used for browser as well as Rhino.  However, test suites for Rhino are stored as plain JavaScript.  For example, a simple test suite `tests/all.js` might contain:
 ```
 /* Include necessary sub-modules here */
-load ('../js/test.js');
+load ('test.js');
 
 /* Run test modules */
 Test.suite ([
@@ -197,7 +214,7 @@ Js-test can be used to test server-side JavaScript written for [Node.js](https:/
 The same test modules can be used for browser and Node.js.  However, test suites in Node.js are stored as plain JavaScript.  For example, a test suite `tests/all.js` might contain
 ```
 /* Include necessary sub-modules here */
-require ('../js/test.js');
+require ('test.js');
 
 /* Run test modules */
 Test.suite ([
@@ -207,7 +224,3 @@ Test.suite ([
 ```
 
 Run the test suite from command line as `node all.js`.
-
-
-
-
