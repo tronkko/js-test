@@ -8,7 +8,7 @@
  * https://github.com/tronkko/js-test
  */
 
-/* Source required node.js modules */
+/* Source required Nodejs modules */
 if (typeof module !== 'undefined') {
     var fs = require ('fs');
 }
@@ -78,6 +78,7 @@ Test.prototype.failure = function () {
 Test.extend = function (args) {
     /* Create new class object */
     var _self;
+    var _that = this;
     if (typeof args != 'object') {
 
         throw new Error ('Invalid argument');
@@ -90,7 +91,6 @@ Test.extend = function (args) {
     } else if (args.hasOwnProperty ('initialize')) {
 
         /* Default constructor with initializer provided */
-        var _that = this;
         _self = function () {
             _that.prototype.constructor.apply (this, arguments);
             args['initialize'].apply (this, arguments);
@@ -99,7 +99,6 @@ Test.extend = function (args) {
     } else {
 
         /* Default constructor with default initializer */
-        var _that = this;
         _self = function () {
             _that.prototype.constructor.apply (this, arguments);
         };
@@ -108,7 +107,7 @@ Test.extend = function (args) {
 
     /* Override existing methods and define new methods */
     _self.prototype = Object.create (this.prototype);
-    for (i in args) {
+    for (var i in args) {
         _self.prototype[i] = args[i];
     }
 
@@ -168,7 +167,7 @@ Test.isArray = function (arg) {
         /* Yes, does the object have the length property? */
         if (typeof arg['length'] == 'number') {
 
-            /* 
+            /*
              * Yes, length property exists so the object MAY be an indexed
              * array.  Loop through keys and find out for sure: the object is
              * deemed an associative array if evan a single non-numeric key
@@ -176,7 +175,7 @@ Test.isArray = function (arg) {
              */
             var re = new RegExp (/^([1-9][0-9]*|0)$/);
             for (var i in arg) {
-                if (!re.test ("" + i)) {
+                if (!re.test ('' + i)) {
                     ok = false;
                     break;
                 }
@@ -196,7 +195,7 @@ Test.isArray = function (arg) {
 
     }
     return ok;
-}
+};
 
 /*
  * Convert argument to string.
@@ -225,7 +224,7 @@ Test.isArray = function (arg) {
 Test.toString = function (arg) {
     /* Convert arrays recursively */
     return Test._toString (arg, 0);
-}
+};
 Test._toString = function (arg, level) {
     var result;
 
@@ -276,9 +275,9 @@ Test._toString = function (arg, level) {
         } else if (arg instanceof Date) {
 
             /* Convert date */
-            function fix (n) {
-                return ((n < 10) ? "0" + n : n);
-            }
+            var fix = function (n) {
+                return ((n < 10) ? '0' + n : n);
+            };
             result = arg.getFullYear ()
                 + '-' + fix (arg.getMonth () + 1)
                 + '-' + fix (arg.getDate ())
@@ -367,7 +366,7 @@ Test._toString = function (arg, level) {
         break;
 
     default:
-        throw new Error ("Invalid data type " + type + " in toString");
+        throw new Error ('Invalid data type ' + type + ' in toString');
     }
 
     return result;
@@ -443,7 +442,7 @@ Test.toBoolean = function (arg) {
 
             /* Object or associative array */
             result = false;
-            for (var i in arg) {
+            for (var dummy in arg) {
                 result = true;
                 break;
             }
@@ -466,7 +465,7 @@ Test.toBoolean = function (arg) {
     }
 
     return result;
-}
+};
 
 /*
  * Convert argument to number.
@@ -528,7 +527,7 @@ Test.toNumber = function (arg) {
 
             /* Associative array evaluates to number of elements */
             result = 0;
-            for (var i in arg) {
+            for (var dummy in arg) {
                 result++;
             }
 
@@ -550,7 +549,7 @@ Test.toNumber = function (arg) {
     }
 
     return result;
-}
+};
 
 /*
  * Test arguments for equality.
@@ -625,7 +624,7 @@ Test.isEqual = function (a, b) {
             break;
 
         default:
-            throw new Error ("Invalid type " + (typeof b));
+            throw new Error ('Invalid type ' + (typeof b));
         }
         break;
 
@@ -662,7 +661,7 @@ Test.isEqual = function (a, b) {
             break;
 
         default:
-            throw new Error ("Invalid type " + (typeof b));
+            throw new Error ('Invalid type ' + (typeof b));
         }
         break;
 
@@ -692,7 +691,7 @@ Test.isEqual = function (a, b) {
             break;
 
         default:
-            throw new Error ("Invalid type " + (typeof b));
+            throw new Error ('Invalid type ' + (typeof b));
         }
         break;
 
@@ -761,7 +760,7 @@ Test.isEqual = function (a, b) {
             break;
 
         default:
-            throw new Error ("Invalid type " + (typeof b));
+            throw new Error ('Invalid type ' + (typeof b));
         }
         break;
 
@@ -792,15 +791,15 @@ Test.isEqual = function (a, b) {
             break;
 
         default:
-            throw new Error ("Invalid type " + (typeof b));
+            throw new Error ('Invalid type ' + (typeof b));
         }
         break;
 
     default:
-        throw new Error ("Invalid type " + (typeof a));
+        throw new Error ('Invalid type ' + (typeof a));
     }
     return ok;
-}
+};
 
 /*
  * Clear test log.
@@ -879,7 +878,7 @@ Test.output = function (/*msg, ...*/) {
         }
 
         /* Append line to debug window */
-        var text = document.createTextNode (msg + "\n");
+        var text = document.createTextNode (msg + '\n');
         pre.appendChild (text);
 
     }
@@ -909,7 +908,7 @@ Test.assert = function (assertion) {
         /* Stop execution of further tests */
         throw new Error (msg);
     }
-}
+};
 
 /*
  * Returns true if test case is being run.
@@ -930,7 +929,7 @@ Test.isTesting = function () {
     }
 
     return ok;
-}
+};
 
 /*
  * Execute test module.
@@ -994,7 +993,7 @@ Test.isTesting = function () {
  */
 Test.module = function (name, def) {
     /* Format test name to string */
-    var title = (name + "                                ").substr (0, 31);
+    var title = (name + '                                ').substr (0, 31);
 
     /* Run test */
     var test = null;
@@ -1087,7 +1086,7 @@ Test.prototype.test = function (name, func/*, exp*/) {
     /* Pick the expected result */
     var exp;
     if (arguments.length > 2) {
-        exp = arguments[2]; 
+        exp = arguments[2];
     } else {
         exp = true;
     }
@@ -1107,10 +1106,10 @@ Test.prototype.test = function (name, func/*, exp*/) {
         /* Test function failed with an exception */
         var msg;
         if (e instanceof Error) {
-            msg = "Test case " + name + " failed with the exception: "
+            msg = 'Test case ' + name + ' failed with the exception: '
                 + e.message;
         } else {
-            msg = "Test case " + name + " failed with an exception";
+            msg = 'Test case ' + name + ' failed with an exception';
         }
         Test._testing--;
         throw new Error (msg);
@@ -1123,14 +1122,13 @@ Test.prototype.test = function (name, func/*, exp*/) {
      */
     if (!Test.isEqual (exp, res)) {
         /* Format message */
-        var msg = 
-            "Test case " + name + " returned " + Test.toString (res)
-            + " while " + Test.toString (exp) + " was expected";
+        var msg = 'Test case ' + name + ' returned ' + Test.toString (res)
+            + ' while ' + Test.toString (exp) + ' was expected';
 
         /* Raise exception to test the program */
         throw new Error (msg);
     }
-}
+};
 
 /*
  * Output result of all tests.
@@ -1216,7 +1214,7 @@ Test.suite = function (tests) {
 
     } else if (typeof load !== 'undefined') {
 
-        /* Running under rhino (probably) */
+        /* Running under Rhino (probably) */
         Test.output ('Running tests:');
         Test.output ('');
         for (var i in tests) {
@@ -1242,7 +1240,7 @@ Test.suite = function (tests) {
 
     } else if (typeof module !== 'undefined') {
 
-        /* Running under node.js */
+        /* Running under Nodejs */
         Test.output ('Running tests:');
         Test.output ('');
         for (var i in tests) {
@@ -1282,7 +1280,7 @@ Test.suite = function (tests) {
  * The code below makes error messages visible on browsers and ensures that
  * syntax errors make the test suite fail as a whole.  This fix is not needed
  * for Rhino or Node.js as error messages are clearly visible in the standard
- * error stream and both Rhino and Node.js stop the execution to the first
+ * error stream and both Rhino and Nodejs stop the execution to the first
  * syntax error.
  */
 if (typeof window != 'undefined'  &&  window.addEventListener) {

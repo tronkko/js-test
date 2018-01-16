@@ -12,6 +12,6 @@ Test.suite ([
     'toString',
     'toBoolean',
     'isEqual',
-    'sanity'
+    'sanity',
 ]);
 
