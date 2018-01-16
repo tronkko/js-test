@@ -1,8 +1,7 @@
 # TEST SUITE FOR JAVASCRIPT
 
-Js-test is a tool for Test Driven Development (TDD)
-
-    http://en.wikipedia.org/wiki/Test-driven_development
+Js-Test is a tool for Test Driven Development
+[(TDD)](http://en.wikipedia.org/wiki/Test-driven_development)
 
 In TDD, developer first creates an automated test case for the planned fix,
 improvement or new feature.  Once the test case is ready, the developer runs
@@ -217,29 +216,12 @@ might be laid out as follows:
     - `tests/user-save.js` - Test module for User.save function
     - `test/test.js` - Js-test source file copied from this repository
 
-For an example, check out Js-vector at
-
-    https://github.com/tronkko/js-vector
+For an example, check out [Js-vector](https://github.com/tronkko/js-vector)
 
 Js-test may be freely distributed under the MIT license.
 
 
-# HINTS
-
-When adding new modules to a test suite, consider adding new modules to the
-beginning of the list.  This speeds up the edit-test-edit cycle as you can
-start fixing errors on the very latest module without waiting for the older
-modules to finish.  (You can move the test module to its proper position after
-you are done editing, if you wish to organize test modules in some way.)
-
-If a test suite takes several minutes to complete, then create additional test
-suites with smaller number of test modules.  This allows you to choose which
-tests to run.  For example, you might want to run a quick sub-system check
-after each edit and run the complete test suite before committing changes to
-version control.
-
-
-## Rhino
+## Using Js-Test with Rhino
 
 Js-test can be used to test server-side JavaScript written for Rhino
 
@@ -263,7 +245,7 @@ Run the test suite from command line as:
     rhino -debug all.js
 
 
-## Nodejs
+## Using Js-Test with Nodejs
 
 Js-test can be used to test server-side JavaScript written for Nodejs
 
@@ -286,3 +268,16 @@ Run the test suite from command line as:
 
     node all.js
 
+## Hints
+
+When adding new modules to a test suite, consider adding new modules to the
+beginning of the list.  This speeds up the edit-test-edit cycle as you can
+start fixing errors on the very latest module without waiting for the older
+modules to finish.  (You can move the test module to its proper position after
+you are done editing, if you wish to organize test modules in some way.)
+
+If a test suite takes several minutes to complete, then create additional test
+suites with smaller number of test modules.  This allows you to choose which
+tests to run.  For example, you might want to run a quick sub-system check
+after each edit and run the complete test suite before committing changes to
+version control.
