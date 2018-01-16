@@ -223,9 +223,8 @@ Js-test may be freely distributed under the MIT license.
 
 ## Using Js-Test with Rhino
 
-Js-test can be used to test server-side JavaScript written for Rhino
-
-    https://developer.mozilla.org/en-US/docs/Rhino_documentation
+Js-test can be used to test server-side JavaScript written for
+[Rhino](https://developer.mozilla.org/en-US/docs/Rhino_documentation)
 
 The same test modules can be used for browser and Rhino.  The test modules in
 Rhino, however, are plain JavaScript.  For example, a simple test suite
@@ -247,9 +246,8 @@ Run the test suite from command line as:
 
 ## Using Js-Test with Nodejs
 
-Js-test can be used to test server-side JavaScript written for Nodejs
-
-    https://nodejs.org/
+Js-test can be used to test server-side JavaScript written for
+[Nodejs](https://nodejs.org/)
 
 The same test modules can be used for browser and Nodejs.  However, test
 suites in Node.js are stored as plain JavaScript.  For example, a test
