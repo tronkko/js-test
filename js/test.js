@@ -1365,6 +1365,7 @@ if (typeof java != 'undefined'  &&  typeof Promise == 'undefined') {
         return p;
     };
 
+    /* Execute handler after promise completes */
     Promise.prototype.then = function (success/*, error*/) {
         var _self = this;
 
@@ -1424,6 +1425,7 @@ if (typeof java != 'undefined'  &&  typeof Promise == 'undefined') {
         return p;
     };
 
+    /* Catch an error in promise chain */
     Promise.prototype.catch = function (error) {
         return this.then (null, error);
     };
