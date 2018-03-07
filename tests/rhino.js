@@ -13,5 +13,6 @@ Test.suite ([
     'toBoolean',
     'isEqual',
     'sanity',
+    'async',
 ]);
 

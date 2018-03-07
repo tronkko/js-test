@@ -1,7 +1,7 @@
 /*
  * isString.js
  * Test module for isString function
- * 
+ *
  * Copyright (c) 2015 Toni Ronkko
  * This file is part of js-test.  Js-test may be freely distributed
  * under the MIT license.  For all details and documentation, see

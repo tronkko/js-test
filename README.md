@@ -224,10 +224,11 @@ Js-test may be freely distributed under the MIT license.
 ## Using Js-Test with Rhino
 
 Js-test can be used to test server-side JavaScript written for
-[Rhino](https://developer.mozilla.org/en-US/docs/Rhino_documentation)
+[Rhino](https://developer.mozilla.org/en-US/docs/Rhino_documentation).
+However, only synchronous code can be tested at the moment.
 
-The same test modules can be used for browser and Rhino.  The test modules in
-Rhino, however, are plain JavaScript.  For example, a simple test suite
+The same test modules are used for both browser and Rhino.  The test modules
+in Rhino, however, are plain JavaScript.  For example, a simple test suite
 `tests/all.js` might contain:
 
     /* Include necessary sub-modules here */
@@ -246,12 +247,15 @@ Run the test suite from command line as:
 
 ## Using Js-Test with Nodejs
 
-Js-test can be used to test server-side JavaScript written for
-[Nodejs](https://nodejs.org/)
+Js-test can be used to test both client and server-side JavaScript written for
+[Nodejs](https://nodejs.org/).  In order to use js-test, you will only need to
+install promise library as
 
-The same test modules can be used for browser and Nodejs.  However, test
+    npm install promise
+
+The same test modules are used for both browser and Nodejs.  However, test
 suites in Node.js are stored as plain JavaScript.  For example, a test
-suite `tests/all.js` might contain
+suite `tests/all.js` might contain:
 
     /* Include necessary sub-modules here */
     var Test = require ('test.js');
@@ -266,16 +270,18 @@ Run the test suite from command line as:
 
     node all.js
 
+
 ## Hints
 
 When adding new modules to a test suite, consider adding new modules to the
 beginning of the list.  This speeds up the edit-test-edit cycle as you can
 start fixing errors on the very latest module without waiting for the older
 modules to finish.  (You can move the test module to its proper position after
-you are done editing, if you wish to organize test modules in some way.)
+you are done editing.)
 
 If a test suite takes several minutes to complete, then create additional test
 suites with smaller number of test modules.  This allows you to choose which
 tests to run.  For example, you might want to run a quick sub-system check
 after each edit and run the complete test suite before committing changes to
 version control.
+

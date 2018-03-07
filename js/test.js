@@ -1,17 +1,12 @@
 /*
  * js-test 1.0
  * Unit testing framework for JavaScript
- * 
+ *
  * Copyright (c) 2015 Toni Ronkko
  * This file is part of js-test.  Js-test may be freely distributed
  * under the MIT license.  For all details and documentation, see
  * https://github.com/tronkko/js-test
  */
-
-/* Source required Nodejs modules */
-if (typeof module !== 'undefined') {
-    var fs = require ('fs');
-}
 
 /*
  * Namespace and base class for tests.
@@ -20,12 +15,14 @@ Test = function () {
 };
 Test.prototype = {};
 Test.prototype.constructor = Test;
+Test.prototype._queue = null;
 
 /* Initialize static variables */
 Test._testing = 0;
 Test._success = 0;
 Test._failed = 0;
 Test._names = {};
+Test._queue = null;
 
 /* Define placeholder functions */
 Test.prototype.cleanup = function () {
@@ -995,57 +992,90 @@ Test.module = function (name, def) {
     /* Format test name to string */
     var title = (name + '                                ').substr (0, 31);
 
-    /* Run test */
-    var test = null;
-    try {
+    /* Create derived class for test */
+    var MyTest;
+    if (typeof def == 'object') {
+        MyTest = Test.extend (def);
+    } else {
+        MyTest = Test.extend ({
+            run: def
+        });
+    }
 
-        /* Record start time */
-        var start = (new Date ()).getTime ();
+    /* Initialize module queue */
+    if (Test._queue === null) {
+        Test._queue = Promise.resolve ();
+    }
 
-        /* Create derived class for test */
-        var MyTest;
-        if (typeof def == 'object') {
-            MyTest = Test.extend (def);
-        } else {
-            MyTest = Test.extend ({
-                run: def
-            });
-        }
-
+    /* Post module to module queue */
+    var test;
+    Test._queue = Test._queue.then (function () {
         /* Create test object and initialize the test */
         test = new MyTest ();
+        try {
 
-        /* Run test suite */
-        test.run ();
+            /* Add tests to the queue */
+            test.run ();
+            if (test._queue === null) {
+                throw new Error ('Test module ' + name + ' has not tests');
+            }
 
-        /* Compute the number of milliseconds elapsed */
-        var end = (new Date ()).getTime ();
-        var elapsed = (end - start) / 1000;
+        } catch (e) {
+
+            /* Failed to add tests */
+            var msg;
+            if (e instanceof Error) {
+                msg = 'Test module ' + name
+                    + ' failed with the exception: '
+                    + e.message;
+            } else {
+                msg = 'Test module ' + name + ' failed with an exception';
+            }
+
+            /* Execute cleanup function */
+            test.failure ();
+            test.cleanup ();
+
+            /* Pass the message to error handler */
+            throw new Error (msg);
+
+        }
+
+        /*
+         * Return the queue.  If some asynchronous tests are added to the
+         * queue, then the success callback will not be executed immediately.
+         */
+        return test._queue;
+
+    }).then (function (result) {
 
         /* Test succeeded */
-        if (elapsed < 1000) {
-            Test.output (title, 'OK');
-        } else {
-            Test.output (title, 'OK', '(' + elapsed + ')');
-        }
+        Test.output (title, 'OK');
         test.success ();
-        Test._success++;
-
-    }
-    catch (e) {
-
-        /* Test failed */
-        Test.output (title, 'FAILED');
-        Test.output (e.message);
-        test.failure ();
-        Test._failed++;
-
-    }
-
-    /* Cleanup */
-    if (test) {
         test.cleanup ();
-    }
+        Test._success++;
+        return true;
+
+    }, function (e) {
+
+        /* Test failed with exception */
+        var msg;
+        if (e instanceof Error) {
+            msg = e.message;
+        } else {
+            msg = Test.toString (error);
+        }
+
+        /* Output test result */
+        Test.output (title, 'FAILED');
+        Test.output (msg);
+        test.failure ();
+        test.cleanup ();
+        Test._failed++;
+        return false;
+
+    });
+    return Test._queue;
 };
 
 /*
@@ -1083,12 +1113,29 @@ Test.module = function (name, def) {
  * @param mixed exp Expected result of the test function (optional)
  */
 Test.prototype.test = function (name, func/*, exp*/) {
+    var _self = this;
+    var args = arguments;
+
+    /* Initialize test queue for the module */
+    if (this._queue === null) {
+        this._queue = Promise.resolve ();
+    }
+
+    /* Add promise to queue */
+    this._queue = this._queue.then (function () {
+        return _self._test.apply (_self, args);
+    });
+    return this._queue;
+};
+Test.prototype._test = function (name, func/*, exp*/) {
+    var _self = this;
+
     /* Pick the expected result */
-    var exp;
+    var expected;
     if (arguments.length > 2) {
-        exp = arguments[2];
+        expected = arguments[2];
     } else {
-        exp = true;
+        expected = true;
     }
 
     /* Issue a warning if test name is not unique */
@@ -1097,58 +1144,86 @@ Test.prototype.test = function (name, func/*, exp*/) {
     }
     Test._names[name] = 1;
 
-    /* Run test function */
-    Test._testing++;
-    try {
-        var res = func.apply (this);
-    }
-    catch (e) {
-        /* Test function failed with an exception */
-        var msg;
-        if (e instanceof Error) {
-            msg = 'Test case ' + name + ' failed with the exception: '
-                + e.message;
-        } else {
-            msg = 'Test case ' + name + ' failed with an exception';
+    /* Append test function to queue */
+    var p1 = Promise.resolve ().then (function () {
+        var result;
+
+        /* Start the test */
+        Test._testing++;
+
+        try {
+
+            /* Run the test function */
+            result = func.apply (_self);
+
         }
+        catch (e) {
+            /* Test function failed with an exception */
+            var msg;
+            if (e instanceof Error) {
+                msg = 'Test case ' + name + ' failed with the exception: '
+                    + e.message;
+            } else {
+                msg = 'Test case ' + name + ' failed with an exception';
+            }
+
+            /* End test */
+            Test._testing--;
+
+            /* Pass the error message to error handler */
+            throw new Error (msg);
+        }
+
+        /*
+         * Pass the return value to success handler.  If the test function
+         * returns a promise, then the success handler is not executed
+         * immediately.
+         */
+        return result;
+
+    }).then (function (result) {
+
+        /* Mark the end of test */
         Test._testing--;
-        throw new Error (msg);
-    }
-    Test._testing--;
 
-    /* 
-     * Test function did produce a value so compare the result against the
-     * expected result to see if the test passed.
-     */
-    if (!Test.isEqual (exp, res)) {
-        /* Format message */
-        var msg = 'Test case ' + name + ' returned ' + Test.toString (res)
-            + ' while ' + Test.toString (exp) + ' was expected';
+        /*
+         * Compare the computed result against the expected result to
+         * see if the test passed.
+         */
+        if (!Test.isEqual (expected, result)) {
+            /* Format message */
+            var msg = 'Test case ' + name + ' returned '
+                + Test.toString (result) + ' while '
+                + Test.toString (expected) + ' was expected';
 
-        /* Raise exception to test the program */
-        throw new Error (msg);
-    }
+            /* Pass the error message to error handler */
+            throw new Error (msg);
+        }
+
+    });
+    return p1;
 };
 
 /*
  * Output result of all tests.
  */
 Test.complete = function () {
-    if (Test._success > 0  &&  Test._failed == 0) {
+    /* Wait for all tests to complete */
+    Test._queue = Test._queue.then (function () {
 
-        Test.output ('');
-        Test.output ('All', Test._success, 'test modules passed');
+        /* Determine if the test suite as a whole was successful or not */
+        if (Test._success > 0  &&  Test._failed == 0) {
+            Test.output ('');
+            Test.output ('All ' + Test._success + ' test modules passed');
+        } else if ((Test._success + Test._failed) > 0) {
+            Test.output ('');
+            Test.output ('SOME TESTS FAILED');
+        } else {
+            Test.output ('No test modules were run!');
+        }
 
-    } else if ((Test._success + Test._failed) > 0) {
-
-        Test.output ('');
-        Test.output ('SOME TESTS FAILED');
-
-    } else {
-
-        Test.output ('No test modules were run!');
-
-    }
+        return true;
+    });
 };
 
 /*
@@ -1181,15 +1256,48 @@ Test.suite = function (tests) {
     /* Clear debug window */
     Test.clear ();
 
-    /* Branch according to development system */
-    if (typeof window !== 'undefined') {
+    /* Run the test suite in current environment */
+    Test._suite (tests);
+}
 
-        /* Running in browser */
+
+/****** BROWSER *************************************************************/
+
+/*
+ * Add global error handler to catch syntax errors outside test cases.
+ *
+ * Browsers typically output error messages in console which is hidden by
+ * default.  To make matters worse, browsers don't usually stop on errors but
+ * continue running from the next JavaScript file.  As such, syntax
+ * errors in test modules are easily left unnoticed by the developer.
+ *
+ * The code below makes error messages visible on browsers and ensures that
+ * syntax errors make the test suite fail as a whole.  This fix is not needed
+ * for Rhino or Node.js as error messages are clearly visible in the standard
+ * error stream and both Rhino and Nodejs stop the execution to the first
+ * syntax error.  (Rhino and Nodejs do not have the window variable.)
+ */
+if (typeof window != 'undefined'  &&  window.addEventListener) {
+    window.addEventListener ('error', function (e) {
+        /* Increment error counter so that tests won't pass cleanly */
+        Test._failed++;
+
+        /* Output error message to debug log */
+        Test.output (e.message, 'in file', e.filename);
+
+        /* Let the default handler run */
+        return false;
+    }, false);
+}
+
+/* Run the test suite */
+if (typeof window !== 'undefined') {
+    Test._suite = function (tests) {
         Test.output ('Running tests:');
         Test.output ('');
         for (var i in tests) {
 
-            /* 
+            /*
              * Create unique url for the test script by adding time stamp at
              * the end of the script.  This ensures that test script is
              * reloaded from server each time the test is run.
@@ -1211,10 +1319,134 @@ Test.suite = function (tests) {
             + 'Test.complete ();\n'
             + '</script>'
         );
+    };
+}
 
-    } else if (typeof load !== 'undefined') {
 
-        /* Running under Rhino (probably) */
+/****** RHINO ***************************************************************/
+
+/* Define a rudimentary promise class for Rhino */
+if (typeof java != 'undefined'  &&  typeof Promise == 'undefined') {
+    /* Create new promise */
+    function Promise (handler) {
+        var _self = this;
+        this.mode = 0;
+        this.result = undefined;
+        var success = function (result) {
+            _self.mode = 0;
+            _self.result = result;
+        };
+        var error = function (e) {
+            _self.mode = 1;
+            _self.result = e;
+        };
+        handler.call (_self, success, error);
+    }
+    Promise.prototype = {};
+    Promise.prototype.constructor = Test;
+
+    /* Create promise that is already resolved */
+    Promise.resolve = function (/*args*/) {
+        var _self = this;
+        var args = arguments;
+        var p = new Promise (function (resolve, reject) {
+            resolve.apply (_self, args);
+        });
+        return p;
+    };
+
+    /* Create promise that is already rejected */
+    Promise.reject = function (/*args*/) {
+        var _self = this;
+        var args = arguments;
+        var p = new Promise (function (resolve, reject) {
+            reject.apply (_self, args);
+        });
+        return p;
+    };
+
+    Promise.prototype.then = function (success/*, error*/) {
+        var _self = this;
+
+        /* Get error callback */
+        var error;
+        if (arguments.length >= 2) {
+            error = arguments[1];
+        } else {
+            error = null;
+        }
+
+        /* Clone promise */
+        var p = new Promise (function (resolve, reject) {
+            this.mode = _self.mode;
+            this.result = _self.result;
+
+            /* Execute callback */
+            if (this.mode == 0  &&  success) {
+                /* Success */
+                try {
+
+                    /* Execute success callback */
+                    this.result = success.call (this, this.result);
+
+                }
+                catch (e) {
+                    /* Start scanning for matching catch block */
+                    this.mode = 1;
+                    this.result = e;
+                }
+            } else if (this.mode == 1  &&  error) {
+                /* Error */
+                var result;
+                try {
+
+                    /* Execute error callback */
+                    result = error.call (this, this.result);
+
+                    /*
+                     * If error callback returns a value, then resume
+                     * processing of blocks.
+                     */
+                    if (typeof result != 'undefined') {
+                        /* Execute then blocks normally */
+                        this.result = result;
+                        this.mode = 0;
+                    }
+
+                }
+                catch (e) {
+                    /* Rethrow */
+                    this.mode = 1;
+                    this.result = e;
+                }
+            }
+        });
+        return p;
+    };
+
+    Promise.prototype.catch = function (error) {
+        return this.then (null, error);
+    };
+}
+
+/*
+ * Define rudimentary setTimeout function.
+ *
+ * Be ware that the mere function definition may interfere with Nodejs: trying
+ * to declare setTimeout as a function may product a fatal error "setTimeout
+ * is not a function" even though the block below is not executed on Nodejs!
+ * Probably some bug in Node's parser.
+ */
+if (typeof java != 'undefined'  &&  typeof setTimeout == 'undefined') {
+    setTimeout = function (callback, time) {
+        /* Ignore delay and execute the callback function immediately */
+        callback ();
+    }
+}
+
+/* Run the test suite */
+if (typeof load !== 'undefined') {
+    Test._suite = function (tests) {
         Test.output ('Running tests:');
         Test.output ('');
         for (var i in tests) {
@@ -1237,67 +1469,49 @@ Test.suite = function (tests) {
 
         /* Finish tests */
         Test.complete ();
+    };
+}
 
-    } else if (typeof module !== 'undefined') {
 
-        /* Running under Nodejs */
+/****** NODEJS **************************************************************/
+if (typeof module !== 'undefined') {
+
+    /* Source required Nodejs modules */
+    var fs = require ('fs');
+    var Promise = require ('promise');
+
+    /* Run the test suite */
+    Test._suite = function (tests) {
         Test.output ('Running tests:');
         Test.output ('');
         for (var i in tests) {
 
-            /* Create file name */
+            /* Load test module to memory */
+            var data;
             var src = './' + tests[i] + '.js';
+            if (fs.existsSync (src)) {
+                data = fs.readFileSync (src, 'utf8');
+            } else {
+                src = './tests/' + tests[i] + '.js';
+                data = fs.readFileSync (src, 'utf8');
+            }
 
             /*
-             * Load test module to memory and run it using eval.  Eval is
-             * preferred here over require so that the very same JavaScript
-             * file can be run unmodified on a browser.
+             * Run the test module using eval.  Eval is preferred over require
+             * so that the very same JavaScript file can be run unmodified on
+             * browser and Nodejs.
              */
-            var data = fs.readFileSync (src, 'utf8');
             eval (data);
 
         }
 
         /* Finish tests */
         Test.complete ();
+    };
 
-    } else {
-
-        /* Not running under any known JavaScript system */
-        throw new Error ('Cannot source test modules');
-
-    }
-};
-
-/* 
- * Add global error handler to catch syntax errors outside test cases.
- *
- * Browsers typically output error messages in console which is hidden by
- * default.  To make matters worse, browsers don't usually stop on errors but
- * continue running from the next JavaScript file.  As such, syntax
- * errors in test modules are easily left unnoticed by the developer.
- *
- * The code below makes error messages visible on browsers and ensures that
- * syntax errors make the test suite fail as a whole.  This fix is not needed
- * for Rhino or Node.js as error messages are clearly visible in the standard
- * error stream and both Rhino and Nodejs stop the execution to the first
- * syntax error.
- */
-if (typeof window != 'undefined'  &&  window.addEventListener) {
-    window.addEventListener ('error', function (e) {
-        /* Increment error counter so that tests won't pass cleanly */
-        Test._failed++;
-
-        /* Output error message to debug log */
-        Test.output (e.message, 'in file', e.filename);
-
-        /* Let the default handler run */
-        return false;
-    }, false);
-}
-
-/* Export Test class for node.js */
-if (typeof module !== 'undefined') {
+    /* Export the Test class */
     module.exports = Test;
+
 }
+
 

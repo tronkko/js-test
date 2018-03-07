@@ -1,7 +1,7 @@
 /*
  * toString.js
  * Test module for toString function
- * 
+ *
  * Copyright (c) 2015 Toni Ronkko
  * This file is part of js-test.  Js-test may be freely distributed
  * under the MIT license.  For all details and documentation, see

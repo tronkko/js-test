@@ -1,0 +1,26 @@
+{
+  "name": "@tronkko/js-test",
+  "version": "1.0.0",
+  "description": "Test suite for JavaScript",
+  "main": "js/test.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "promise": "^8.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node tests/node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tronkko/js-test.git"
+  },
+  "author": "Toni Ronkko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tronkko/js-test/issues"
+  },
+  "homepage": "https://github.com/tronkko/js-test#readme"
+}
